@@ -30,6 +30,4 @@ def get_channel_summary(db: Session):
         metrics="views,estimatedMinutesWatched,averageViewDuration"
     )
 
-    response = request.execute()
-
-    return response
+    return request.execute()
