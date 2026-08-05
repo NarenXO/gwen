@@ -9,4 +9,19 @@ router = APIRouter()
 
 @router.get("/summary")
 def analytics_summary(db: Session = Depends(get_db)):
-    return get_channel_summary(db)
+    data = get_channel_summary(db)
+
+    if not data.get("rows"):
+        return {
+            "views": 0,
+            "watch_time_minutes": 0,
+            "average_view_duration_seconds": 0
+        }
+
+    row = data["rows"][0]
+
+    return {
+        "views": row[0],
+        "watch_time_minutes": row[1],
+        "average_view_duration_seconds": row[2]
+    }
