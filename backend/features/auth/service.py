@@ -1,13 +1,11 @@
 import requests
 from datetime import datetime, timedelta
-from dateutil.parser import parse
 from sqlalchemy.orm import Session
 
 from config.settings import get_settings
 from features.auth.models import User, Token
 
 settings = get_settings()
-
 
 GOOGLE_AUTH_BASE = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
@@ -19,7 +17,7 @@ def get_google_auth_url():
         "client_id": settings.GOOGLE_CLIENT_ID,
         "redirect_uri": settings.GOOGLE_REDIRECT_URI,
         "response_type": "code",
-        "scope": "openid email profile https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/yt-analytics.readonly",
+        "scope": "openid email profile https://www.googleapis.com/auth/youtube.force-ssl https://www.googleapis.com/auth/yt-analytics.readonly",
         "access_type": "offline",
         "prompt": "consent"
     }
