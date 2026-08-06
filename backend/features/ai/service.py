@@ -1,37 +1,3 @@
-<<<<<<< HEAD
-from typing import Dict
-
-
-def route_action(message: str) -> Dict:
-    """
-    Determines which AI module should handle the user's request.
-    """
-
-    text = message.lower()
-
-    if "analytics" in text or "performance" in text:
-        return {"intent": "analytics_summary"}
-
-    elif "idea" in text or "content" in text:
-        return {"intent": "content_strategy"}
-
-    elif "comment" in text:
-        return {"intent": "analyze_comments"}
-
-    elif "thumbnail" in text:
-        return {"intent": "analyze_thumbnail"}
-
-    elif "video" in text:
-        return {"intent": "video_analyze"}
-
-    elif "title" in text or "description" in text:
-        return {"intent": "creator_twin"}
-
-    elif "schedule" in text:
-        return {"intent": "schedule_upload"}
-
-    return {"intent": "unknown"}
-=======
 import os
 from google import genai
 from sqlalchemy.orm import Session
@@ -42,6 +8,15 @@ from features.youtube.data_service import (
     fetch_video_details,
     fetch_comments,
     fetch_recent_videos
+)
+
+from features.ai.intelligence import (
+    classify_intent,
+    build_performance_prompt,
+    build_comment_prompt,
+    build_video_analysis_prompt,
+    build_creator_twin_prompt,
+    build_content_strategy_prompt
 )
 
 # ✅ Initialize Gemini client
@@ -63,10 +38,9 @@ def call_gemini(prompt: str) -> str:
 
         return response.candidates[0].content.parts[0].text
 
-    except Exception:
+    except Exception as e:
+        print("Gemini Error:", e)   # 👈 ADD THIS
         return "AI analysis temporarily unavailable."
-
-
 # =====================================================
 # ✅ SIMPLE HEURISTIC CHANNEL HEALTH SCORE
 # =====================================================
@@ -84,12 +58,13 @@ def compute_channel_health(views, watch_time, avg_duration):
 # ✅ MAIN AI ROUTER
 # =====================================================
 def handle_ai_action(db: Session, message: str):
-    message_lower = message.lower()
+
+    intent = classify_intent(message)
 
     # =====================================================
-    # ✅ CHANNEL PERFORMANCE ANALYSIS
+    # ✅ CHANNEL PERFORMANCE
     # =====================================================
-    if "performance" in message_lower or "analytics" in message_lower:
+    if intent == "analytics_summary":
 
         analytics = get_channel_summary(db)
         latest_video = fetch_latest_video(db)
@@ -112,7 +87,6 @@ def handle_ai_action(db: Session, message: str):
         if latest_video:
             video_details = fetch_video_details(db, latest_video["video_id"])
 
-        # ✅ Strict zero-data handling
         if views == 0:
             return {
                 "reply": f"""📊 Performance Snapshot:
@@ -121,7 +95,7 @@ def handle_ai_action(db: Session, message: str):
 
 🎯 Action:
 - Publish consistently.
-- Improve discoverability with SEO titles and thumbnails.""",
+- Improve discoverability with SEO titles.""",
                 "action": None,
                 "data": {
                     "views": views,
@@ -131,41 +105,16 @@ def handle_ai_action(db: Session, message: str):
                 }
             }
 
-        prompt = f"""
-You are a senior YouTube growth strategist.
-
-STRICT RULES:
-- Use ONLY numbers provided.
-- Do NOT invent percentages.
-- Keep response under 130 words.
-- Be concise and strategic.
-
-CHANNEL METRICS:
-Views: {views}
-Watch Time (minutes): {watch_time}
-Average View Duration (seconds): {avg_duration}
-Channel Health: {health}
-
-LATEST VIDEO:
-Title: {latest_video['title'] if latest_video else 'N/A'}
-Views: {video_details['views'] if video_details else 'N/A'}
-Likes: {video_details['likes'] if video_details else 'N/A'}
-Comments: {video_details['comments'] if video_details else 'N/A'}
-
-Output format:
-
-📊 Performance Snapshot:
-- Key insight
-- Strength
-- Weakness
-
-📈 Growth Insight:
-- What limits growth
-
-🎯 Action:
-- 1 improvement
-- 1 strategic move
-"""
+        prompt = build_performance_prompt(
+            views,
+            watch_time,
+            avg_duration,
+            health,
+            latest_video["title"] if latest_video else "N/A",
+            video_details["views"] if video_details else "N/A",
+            video_details["likes"] if video_details else "N/A",
+            video_details["comments"] if video_details else "N/A"
+        )
 
         reply = call_gemini(prompt)
 
@@ -176,25 +125,20 @@ Output format:
                 "views": views,
                 "watch_time_minutes": watch_time,
                 "avg_view_duration_seconds": avg_duration,
-                "health": health,
-                "latest_video": latest_video
+                "health": health
             }
         }
 
-      # =====================================================
-    # ✅ SMART COMMENT ANALYSIS WITH PAGINATION
     # =====================================================
-    if "comments" in message_lower:
+    # ✅ COMMENT ANALYSIS
+    # =====================================================
+    if intent == "comment_analysis":
 
         selected_video = None
         comments = None
-
         page_token = None
-        checked_videos = 0
-        max_videos_to_check = 50
 
-        while checked_videos < max_videos_to_check:
-
+        while True:
             videos, page_token = fetch_recent_videos(
                 db,
                 page_token=page_token,
@@ -205,54 +149,29 @@ Output format:
                 break
 
             for video in videos:
-                checked_videos += 1
-
                 try:
                     fetched_comments = fetch_comments(db, video["video_id"])
-
                     if fetched_comments:
                         selected_video = video
                         comments = fetched_comments
                         break
-
                 except Exception:
                     continue
 
-            if selected_video:
-                break
-
-            if not page_token:
+            if selected_video or not page_token:
                 break
 
         if not selected_video:
             return {
-                "reply": "No videos with enabled comments found on this channel.",
+                "reply": "No videos with enabled comments found.",
                 "action": None,
                 "data": None
             }
 
-        prompt = f"""
-You are a YouTube audience analyst.
-
-Analyze comments for video:
-Title: {selected_video['title']}
-
-Be concise and strategic.
-
-COMMENTS:
-{comments}
-
-Output format:
-
-💬 Audience Mood:
-- Overall sentiment
-
-🔥 Patterns:
-- Recurring themes
-
-🎯 Recommendation:
-- 1 engagement strategy
-"""
+        prompt = build_comment_prompt(
+            selected_video["title"],
+            comments
+        )
 
         reply = call_gemini(prompt)
 
@@ -264,10 +183,11 @@ Output format:
                 "comments_count": len(comments)
             }
         }
+
     # =====================================================
-    # ✅ LATEST VIDEO QUICK ANALYSIS
+    # ✅ VIDEO ANALYSIS
     # =====================================================
-    if "latest video" in message_lower:
+    if intent == "video_analysis":
 
         video = fetch_latest_video(db)
 
@@ -280,26 +200,12 @@ Output format:
 
         details = fetch_video_details(db, video["video_id"])
 
-        prompt = f"""
-You are a YouTube growth advisor.
-
-Analyze briefly.
-Be concise and strategic.
-
-Title: {details['title']}
-Views: {details['views']}
-Likes: {details['likes']}
-Comments: {details['comments']}
-
-Output:
-
-📊 Quick Insight:
-- Strength
-- Weakness
-
-🎯 Improvement:
-- 1 actionable fix
-"""
+        prompt = build_video_analysis_prompt(
+            details["title"],
+            details["views"],
+            details["likes"],
+            details["comments"]
+        )
 
         reply = call_gemini(prompt)
 
@@ -321,4 +227,3 @@ Output:
         "action": None,
         "data": None
     }
->>>>>>> main
