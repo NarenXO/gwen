@@ -101,6 +101,20 @@ def classify_intent(message: str) -> str:
                 "how's my channel",
                 "how am i doing",
                 "channel growth",
+                "channel analytics",
+                "show me my channel analytics",
+                "show my channel analytics",
+                "show me analytics",
+                "my analytics",
+                "how are my views doing",
+                "how are my views",
+                "how are views doing",
+                "my views doing",
+                "my views",
+                "channel views",
+                "views performance",
+                "views stat",
+                "views stats",
             ],
         ),
         (
@@ -126,6 +140,49 @@ def classify_intent(message: str) -> str:
                 "video review",
                 "how did my last video do",
                 "how did my recent video perform",
+                "what is wrong with my latest video",
+                "what's wrong with my latest video",
+                "what is wrong with my video",
+            ],
+        ),
+        (
+            INTENT_CREATOR_TWIN,
+            [
+                "how should i respond to my audience",
+                "how should i respond",
+                "respond to my audience",
+                "respond to audience",
+                "help me reply to my viewers",
+                "help me reply",
+                "reply to my viewers",
+                "reply to viewers",
+                "reply to my audience",
+                "reply to audience",
+                "respond to viewers",
+                "respond to my viewers",
+                "how to respond",
+                "how to reply",
+                "help me respond",
+                "write reply",
+                "draft reply",
+                "generate reply",
+                "reply to comments",
+                "respond to comments",
+                "generate title",
+                "write description",
+                "generate description",
+                "write title",
+                "create title",
+                "creator twin",
+                "generate tags",
+                "craft title",
+                "suggest title",
+                "write tags",
+                "title and description",
+                "create description",
+                "title generator",
+                "description generator",
+                "write a thumbnail text",
             ],
         ),
         (
@@ -164,26 +221,15 @@ def classify_intent(message: str) -> str:
                 "future video ideas",
                 "topics to cover",
                 "what video should i make",
-            ],
-        ),
-        (
-            INTENT_CREATOR_TWIN,
-            [
-                "generate title",
-                "write description",
-                "generate description",
-                "write title",
-                "create title",
-                "creator twin",
-                "generate tags",
-                "craft title",
-                "suggest title",
-                "write tags",
-                "title and description",
-                "create description",
-                "title generator",
-                "description generator",
-                "write a thumbnail text",
+                "what videos should i make",
+                "what videos should i make next",
+                "what video should i make next",
+                "videos to make next",
+                "content plan",
+                "give me a content plan",
+                "give me content plan",
+                "videos to make",
+                "what to make next",
             ],
         ),
     ]
@@ -195,24 +241,39 @@ def classify_intent(message: str) -> str:
                 return intent
 
     # Pass 2: Keyword combinations for natural variation
-    if any(k in text for k in ["channel", "performance", "analytics", "stats", "health"]) and any(
-        k in text for k in ["analyze", "how", "check", "summary", "report", "overall", "doing"]
+
+    # 1. Creator Twin / Reply intent precedence over generic comment analysis
+    if any(k in text for k in ["reply", "respond", "response"]) and any(
+        k in text for k in ["viewer", "viewers", "audience", "comment", "comments", "people", "fan", "fans", "subscriber", "subscribers"]
+    ):
+        return INTENT_CREATOR_TWIN
+
+    # 2. Analytics Summary
+    if any(k in text for k in ["channel", "performance", "analytics", "stats", "health", "view", "views", "metrics"]) and any(
+        k in text for k in ["analyze", "how", "check", "summary", "report", "overall", "doing", "show", "get", "see"]
     ):
         return INTENT_ANALYTICS_SUMMARY
 
+    # 3. Video Analysis
     if any(k in text for k in ["video", "upload"]) and any(
-        k in text for k in ["analyze", "review", "newest", "latest", "recent", "last", "performance"]
+        k in text for k in ["analyze", "review", "newest", "latest", "recent", "last", "performance", "wrong"]
     ):
         return INTENT_VIDEO_ANALYSIS
 
+    # 4. Comment Analysis
     if any(k in text for k in ["comment", "comments", "viewer", "viewers", "audience", "feedback"]):
         return INTENT_COMMENT_ANALYSIS
 
-    if any(k in text for k in ["idea", "ideas", "upload", "strategy", "topic", "topics"]) and any(
-        k in text for k in ["content", "what", "next", "give", "suggest", "future", "new", "make"]
+    # 5. Content Strategy
+    if (
+        any(k in text for k in ["idea", "ideas", "upload", "strategy", "topic", "topics", "plan", "roadmap"])
+        and any(k in text for k in ["content", "what", "next", "give", "suggest", "future", "new", "make"])
+    ) or (
+        "videos" in text and any(k in text for k in ["make next", "should i make", "to make"])
     ):
         return INTENT_CONTENT_STRATEGY
 
+    # 6. Creator Twin (Title / Description / Tags)
     if any(k in text for k in ["title", "description", "tag", "tags"]) and any(
         k in text for k in ["generate", "write", "create", "make", "draft", "suggest", "craft"]
     ):
