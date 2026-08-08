@@ -8,6 +8,7 @@ from features.analytics.routes import router as analytics_router
 from features.videos.routes import router as videos_router
 from features.comments.routes import router as comments_router
 from features.ai.routes import router as ai_router
+from features.video_processing.routes import router as video_router, thumbnail_router
 from fastapi.responses import JSONResponse
 from fastapi import Request
 
@@ -22,6 +23,8 @@ app.include_router(analytics_router, prefix="/analytics", tags=["Analytics"])
 app.include_router(videos_router, prefix="/videos", tags=["Videos"])
 app.include_router(comments_router, prefix="/comments", tags=["Comments"])
 app.include_router(ai_router, prefix="/ai", tags=["AI"])
+app.include_router(video_router)
+app.include_router(thumbnail_router)
 
 
 
@@ -59,4 +62,4 @@ def db_test():
         return {
             "database": "failed",
             "error": str(e)
-        }
+        } 
