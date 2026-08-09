@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 
-import { GwenFace } from "@/components/gwen/GwenFace";
+import { StaticGwenLogo } from "@/components/gwen/StaticGwenLogo";
 
 export function HomeHero({ hideLogo = false }: { hideLogo?: boolean }) {
   return (
@@ -17,14 +17,13 @@ export function HomeHero({ hideLogo = false }: { hideLogo?: boolean }) {
           <div
             className="absolute inset-0 backdrop-blur-xl backdrop-saturate-150"
             style={{
-              clipPath: "ellipse(43% 47% at 50% 50%)",
+              clipPath: "url(#static-gwen-face-clip)",
               background: "var(--glass)",
             }}
           />
-          <GwenFace
+          <StaticGwenLogo
             className="relative h-full w-full"
             variant="neon"
-            expression="neutral"
             faceFill={false}
           />
         </motion.div>

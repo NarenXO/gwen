@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
-import { GwenFace } from "@/components/gwen/GwenFace";
+import { StaticGwenLogo } from "@/components/gwen/StaticGwenLogo";
 
 const KEY = "gwen-landing-played";
 
@@ -60,12 +60,11 @@ export function LandingSequence({ onDone }: { onDone: () => void }) {
           <div className="relative h-full w-full">
             <div
               className="absolute inset-0 backdrop-blur-xl backdrop-saturate-150"
-              style={{ clipPath: "ellipse(43% 47% at 50% 50%)", background: "var(--glass)" }}
+              style={{ clipPath: "url(#static-gwen-face-clip)", background: "var(--glass)" }}
             />
-            <GwenFace
+            <StaticGwenLogo
               className="relative h-full w-full"
               variant="neon"
-              expression="neutral"
               faceFill={false}
             />
           </div>
