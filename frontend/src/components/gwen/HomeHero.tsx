@@ -11,7 +11,7 @@ export function HomeHero({ hideLogo = false }: { hideLogo?: boolean }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: hideLogo ? 0 : 1 }}
           transition={{ duration: 0 }}
-          className="relative flex aspect-[120/140] w-[min(72vw,60vh,24rem)] items-center justify-center md:w-[min(34vw,62vh,26rem)]"
+          className="relative flex aspect-[120/140] w-[min(90vw,75vh,36rem)] items-center justify-center md:w-[min(50vw,85vh,48rem)] shrink-0"
         >
           {/* Frosted glass fill, clipped to the face silhouette itself */}
           <div

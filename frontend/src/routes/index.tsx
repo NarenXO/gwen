@@ -34,7 +34,7 @@ export const Route = createFileRoute("/")({
 });
 
 function GwenPage() {
-  const [landing, setLanding] = useState(false);
+  const [landing, setLanding] = useState(() => !landingAlreadyPlayed());
   const [active, setActive] = useState<SectionId>("home");
 
   const homeRef = useRef<HTMLElement>(null);
@@ -52,10 +52,7 @@ function GwenPage() {
     [],
   );
 
-  // Landing sequence plays once per browser session.
-  useEffect(() => {
-    if (!landingAlreadyPlayed()) setLanding(true);
-  }, []);
+  // Landing sequence state initialized synchronously above.
 
   const navigate = useCallback(
     (id: SectionId) => {

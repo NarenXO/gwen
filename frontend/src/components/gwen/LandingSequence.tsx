@@ -32,11 +32,11 @@ export function LandingSequence({ onDone }: { onDone: () => void }) {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center">
       <motion.div
-        className="aspect-[120/140] w-[min(34vw,62vh,26rem)]"
+        className="aspect-[120/140] w-[min(90vw,75vh,36rem)] md:w-[min(50vw,85vh,48rem)] shrink-0"
         style={{ perspective: 1000, perspectiveOrigin: "50% 50%" }}
-        initial={{ scale: 0.18, x: 0, opacity: 0 }}
+        initial={{ scale: 0.1, x: 0, opacity: 0 }}
         animate={{
-          scale: [0.18, 1.1, 1.75, 1, 1],
+          scale: [0.1, 0.7, 1.1, 1, 1],
           x: ["0vw", "0vw", "0vw", "-25vw", "-25vw"],
           opacity: [0, 1, 1, 1, 1],
         }}
